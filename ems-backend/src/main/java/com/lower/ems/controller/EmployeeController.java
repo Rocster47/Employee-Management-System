@@ -2,11 +2,10 @@ package com.lower.ems.controller;
 
 import com.lower.ems.config.UserAuthProvider;
 import com.lower.ems.dto.*;
-import com.lower.ems.exception.AppException;
 import com.lower.ems.service.EmployeeService;
+import com.lower.ems.service.JwtBlacklistService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +25,8 @@ public class EmployeeController {
 
     private UserAuthProvider userAuthenticationProvider;
 
+    private JwtBlacklistService jwtBlacklistService;
+
     @GetMapping("/test-secure")
     public String testSecureConnection() {
         return "HTTPS connection is secure! You're connected to the secure API endpoint.";
@@ -36,19 +37,17 @@ public class EmployeeController {
         return ResponseEntity.ok(userAuthenticationProvider.getRole(jwt));
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+    private ResponseCookie generateJwtCookie(String jwt) {
+        Instant expiration = userAuthenticationProvider.getExpiration(jwt);
+        long maxAge = Duration.between(Instant.now(), expiration).getSeconds();
+
+        return ResponseCookie.from("jwt", jwt)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(0)
+                .maxAge(maxAge)
                 .sameSite("Strict")
                 .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body("Logged out successfully.");
     }
 
     @PostMapping("/employees/register")
@@ -99,17 +98,21 @@ public class EmployeeController {
                 .body(employerDto.withoutSensitiveData());
     }
 
-    private ResponseCookie generateJwtCookie(String jwt) {
-        Instant expiration = userAuthenticationProvider.getExpiration(jwt);
-        long maxAge = Duration.between(Instant.now(), expiration).getSeconds();
-
-        return ResponseCookie.from("jwt", jwt)
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@CookieValue("jwt") String jwt) {
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(maxAge)
+                .maxAge(0)
                 .sameSite("Strict")
                 .build();
+
+        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Logged out successfully.");
     }
 
     // Create Employee
@@ -166,32 +169,72 @@ public class EmployeeController {
 
     // Update employee by ID.
     @PutMapping("/employees")
-    public ResponseEntity<EmployeeDto> updateEmployee(@CookieValue("jwt") String jwt,
-                                                      @RequestBody UpdatedEmployeeDto updatedEmployee) {
+    public ResponseEntity<EmployeeDto> updateEmployee(@CookieValue("jwt") String jwt, @RequestBody UpdatedEmployeeDto updatedEmployee) {
         EmployeeDto updated = employeeService.updateEmployee(userAuthenticationProvider.getUserId(jwt), updatedEmployee);
-        return ResponseEntity.ok(updated.withoutSensitiveData());
+        String jwtUpdated = userAuthenticationProvider.createToken(updated.getEmail(), updated.getId(), updated.getFirstName(), updated.getLastName(), "null", "employee");
+
+        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
+
+        ResponseCookie cookie = generateJwtCookie(jwtUpdated);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(updated.withoutSensitiveData());
     }
 
     // Update employer by ID.
     @PutMapping("/employers")
-    public ResponseEntity<EmployerDto> updateEmployer(@CookieValue("jwt") String jwt,
-                                                   @RequestBody UpdatedEmployerDto updatedEmployer) {
+    public ResponseEntity<EmployerDto> updateEmployer(@CookieValue("jwt") String jwt, @RequestBody UpdatedEmployerDto updatedEmployer) {
         EmployerDto updated = employeeService.updateEmployer(userAuthenticationProvider.getUserId(jwt), updatedEmployer);
-        return ResponseEntity.ok(updated.withoutSensitiveData());
+        String jwtUpdated = userAuthenticationProvider.createToken(updated.getEmail(), updated.getId(), updated.getFirstName(), updated.getLastName(), updated.getEmployerName(), "employer");
+
+        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
+
+        ResponseCookie cookie = generateJwtCookie(jwtUpdated);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(updated.withoutSensitiveData());
     }
 
     // Delete employee by ID. (Deletes junction table entries too)
     @DeleteMapping("/employees")
     public ResponseEntity<String> deleteEmployee(@CookieValue("jwt") String jwt) {
         employeeService.deleteEmployee(userAuthenticationProvider.getUserId(jwt));
-        return ResponseEntity.ok("Employee deleted successfully.");
+
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Employee deleted successfully.");
     }
 
     // Delete employer by ID. (Deletes junction table entries too)
     @DeleteMapping("/employers")
     public ResponseEntity<String> deleteEmployer(@CookieValue("jwt") String jwt) {
         employeeService.deleteEmployer(userAuthenticationProvider.getUserId(jwt));
-        return ResponseEntity.ok("Employer deleted successfully.");
+
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Employer deleted successfully.");
     }
 
     @DeleteMapping("/employers/employees/{id}")

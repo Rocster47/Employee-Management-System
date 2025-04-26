@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import {
     getEmployeeById, getEmployerById,
     deleteEmployerAccount, deleteEmployeeAccount,
-    updateEmployee, updateEmployer
+    updateEmployee, updateEmployer,
+    logOut
 } from '../services/EmployeeService'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
@@ -22,7 +23,7 @@ const EditAccount = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
 
-    const isEmployer = location.pathname === '/employer/edit'
+    const isEmployer = location.pathname.startsWith('/employer/edit')
     const [title, setTitle] = useState('')
 
     const [errors, setErrors] = useState({
@@ -147,9 +148,8 @@ const EditAccount = () => {
     }    
 
     function deleteAccount() {
-        setDeleted(true)
-        isEmployer ? deleteEmployerAccount() : deleteEmployeeAccount()
-        logOut()
+        setDeleted(true);
+        (isEmployer ? deleteEmployerAccount() : deleteEmployeeAccount())
             .then(() => {
                 const event = new CustomEvent('accountDeleted');
                 window.dispatchEvent(event)
@@ -157,7 +157,7 @@ const EditAccount = () => {
             .catch(() => {
                 const event = new CustomEvent('accountDeleted');
                 window.dispatchEvent(event)
-            })
+            });
     }
 
     return (

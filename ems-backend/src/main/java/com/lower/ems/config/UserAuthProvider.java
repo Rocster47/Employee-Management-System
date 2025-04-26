@@ -21,10 +21,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Component
@@ -47,6 +44,7 @@ public class UserAuthProvider {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
                 .withSubject(login)
+                .withJWTId(UUID.randomUUID().toString())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
                 .withClaim("id", id)
@@ -89,6 +87,15 @@ public class UserAuthProvider {
 
         Date expiration = decodedJWT.getExpiresAt();
         return expiration.toInstant();
+    }
+
+    public String getJti(String token) {
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        DecodedJWT decodedJWT = JWT.require(algorithm)
+                .build()
+                .verify(token);
+
+        return decodedJWT.getId();
     }
 
     public Long getUserId(String token) {

@@ -205,7 +205,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new AppException("Employee not found with id: " + employeeId, HttpStatus.NOT_FOUND);
         }
 
-        employerRepository.deleteById(employeeId);
+        employeeRepository.deleteById(employeeId);
     }
 
     @Override

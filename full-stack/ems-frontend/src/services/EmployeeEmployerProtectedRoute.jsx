@@ -26,6 +26,7 @@ export const EmployeeEmployerProtectedRoute = () => {
       })
       .catch(() => {
         setAuth(false)
+        setHasEmployerResult(false)
       });
   }, []);
 

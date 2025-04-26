@@ -1,5 +1,6 @@
 package com.lower.ems.config;
 
+import com.lower.ems.service.JwtBlacklistService;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,7 +8,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,6 +16,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    private final JwtBlacklistService jwtBlacklistService;
     private final UserAuthProvider userAuthProvider;
 
     @Override
@@ -36,6 +37,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
+                if (jwtBlacklistService.isTokenBlacklisted(userAuthProvider.getJti(token))) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+
                 SecurityContextHolder.getContext().setAuthentication(
                         userAuthProvider.validateToken(token)
                 );
