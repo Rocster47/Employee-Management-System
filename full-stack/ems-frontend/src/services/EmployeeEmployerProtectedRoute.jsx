@@ -16,7 +16,7 @@ export const EmployeeEmployerProtectedRoute = () => {
         setAuth(true)
         setRole(response.data)
   
-        if (response.data == "employee") {
+        if (response.data === "employee") {
           getEmployersByEmployeeId().then((response) => {
               setHasEmployerResult(response.data.some((employer) => Number(employer.id) === parseInt(id)))
           }).catch(() => {
@@ -30,11 +30,11 @@ export const EmployeeEmployerProtectedRoute = () => {
   }, []);
 
   if (hasEmployerResult != null) {
-    if (auth && role == "employee" && hasEmployerResult) {
+    if (auth && role === "employee" && hasEmployerResult) {
       return <Outlet/>
-    } else if (auth && role == "employee") {
+    } else if (auth && role === "employee") {
       return <Navigate to = '/employee/employers'/>
-    } else if (auth && role == "employer") {
+    } else if (auth && role === "employer") {
       return <Navigate to = '/employer/employees'/>
     } else {
       return <Navigate to = '/login'/>

@@ -15,7 +15,8 @@ const LoginRegister = () => {
 
     const [showPassword, setShowPassword] = useState(false)
     const [isEmployer, setIsEmployer] = useState(false)
-    const [isLoggingIn, setIsLoggingIn] = useState(location.pathname === '/login')
+    const [isLoggingIn, setIsLoggingIn] = useState(location.pathname.startsWith('/login'))
+
 
     const [errors, setErrors] = useState({
         firstName: '',
@@ -51,7 +52,7 @@ const LoginRegister = () => {
                             navigator('/employee/employers');
                         })
                         .catch(error => {
-                            setApiError('Failed to register. Please try again with a different email.');
+                            setApiError('Failed to register account. Please try again with a different email.');
                             console.error(error);
                         });
                 } else if (!isLoggingIn && isEmployer) {
@@ -78,18 +79,23 @@ const LoginRegister = () => {
                                     Error logging in.<br />
                                     Have you entered the correct credentials, or does the account not even exist?
                                 </div>
-                              );
+                            );
                             console.error(error);
                         });
                 } else {
                     const employer = { email, password };
                     loginEmployer(employer)
-                        .then((response) => {
+                        .then(() => {
                             setApiError('');
                             navigator('/employer/employees');
                         })
                         .catch(error => {
-                            setApiError('Failed to log in. Please check your credentials or register if you don’t have an account.');
+                            setApiError(
+                                <div>
+                                    Error logging in.<br />
+                                    Have you entered the correct credentials, or does the account not even exist?
+                                </div>
+                            );
                             console.error(error);
                         });
                 }
@@ -170,6 +176,7 @@ const LoginRegister = () => {
         setEmail('');
         setPassword('');
         setEmployerName('');
+        setShowPassword(false)
 
         setErrors({
             firstName: '',

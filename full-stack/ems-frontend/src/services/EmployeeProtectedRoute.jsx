@@ -18,11 +18,11 @@ const EmployeeProtectedRoute = () => {
       });
   }, []);
   
-  if (auth == null) {
+  if (auth === null) {
     return null
-  } else if (auth && role == "employee") {
+  } else if (auth && role === "employee") {
     return <Outlet/>
-  } else if (auth && role == "employer") {
+  } else if (auth && role === "employer") {
     return <Navigate to = '/employer/employees'/>
   } else {
     return <Navigate to = '/login'/>
