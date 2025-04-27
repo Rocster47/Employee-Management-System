@@ -22,6 +22,8 @@ export const EmployeeEmployerProtectedRoute = () => {
           }).catch(() => {
               setHasEmployerResult(false)
           })
+        } else {
+          setHasEmployerResult(false)
         }
       })
       .catch(() => {
