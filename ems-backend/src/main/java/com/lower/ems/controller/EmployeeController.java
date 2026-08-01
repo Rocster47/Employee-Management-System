@@ -3,7 +3,6 @@ package com.lower.ems.controller;
 import com.lower.ems.config.UserAuthProvider;
 import com.lower.ems.dto.*;
 import com.lower.ems.service.EmployeeService;
-import com.lower.ems.service.JwtBlacklistService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -24,8 +23,6 @@ public class EmployeeController {
     private EmployeeService employeeService;
 
     private UserAuthProvider userAuthenticationProvider;
-
-    private JwtBlacklistService jwtBlacklistService;
 
     @GetMapping("/test-secure")
     public String testSecureConnection() {
@@ -108,8 +105,6 @@ public class EmployeeController {
                 .sameSite("Strict")
                 .build();
 
-        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
-
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body("Logged out successfully.");
@@ -173,8 +168,6 @@ public class EmployeeController {
         EmployeeDto updated = employeeService.updateEmployee(userAuthenticationProvider.getUserId(jwt), updatedEmployee);
         String jwtUpdated = userAuthenticationProvider.createToken(updated.getEmail(), updated.getId(), updated.getFirstName(), updated.getLastName(), "null", "employee");
 
-        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
-
         ResponseCookie cookie = generateJwtCookie(jwtUpdated);
 
         return ResponseEntity.ok()
@@ -187,8 +180,6 @@ public class EmployeeController {
     public ResponseEntity<EmployerDto> updateEmployer(@CookieValue("jwt") String jwt, @RequestBody UpdatedEmployerDto updatedEmployer) {
         EmployerDto updated = employeeService.updateEmployer(userAuthenticationProvider.getUserId(jwt), updatedEmployer);
         String jwtUpdated = userAuthenticationProvider.createToken(updated.getEmail(), updated.getId(), updated.getFirstName(), updated.getLastName(), updated.getEmployerName(), "employer");
-
-        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
 
         ResponseCookie cookie = generateJwtCookie(jwtUpdated);
 
@@ -210,8 +201,6 @@ public class EmployeeController {
                 .sameSite("Strict")
                 .build();
 
-        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
-
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body("Employee deleted successfully.");
@@ -229,8 +218,6 @@ public class EmployeeController {
                 .maxAge(0)
                 .sameSite("Strict")
                 .build();
-
-        jwtBlacklistService.blacklistToken(userAuthenticationProvider.getJti(jwt), Duration.between(Instant.now(), userAuthenticationProvider.getExpiration(jwt)).toMillis());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
