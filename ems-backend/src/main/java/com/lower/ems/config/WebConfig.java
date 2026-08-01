@@ -1,5 +1,6 @@
 package com.lower.ems.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,12 +17,20 @@ import java.util.Arrays;
 @EnableWebMvc
 public class WebConfig {
 
+    private final String frontendBaseUrl;
+
+    public WebConfig(
+            @Value("${frontend.base-url}") String frontendBaseUrl
+    ) {
+        this.frontendBaseUrl = frontendBaseUrl;
+    }
+
     @Bean
     public FilterRegistrationBean corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("https://employee-management-system-1g3.pages.dev/");
+        config.addAllowedOrigin(frontendBaseUrl);
         config.setAllowedHeaders(Arrays.asList(
                 HttpHeaders.AUTHORIZATION,
                 HttpHeaders.CONTENT_TYPE,
