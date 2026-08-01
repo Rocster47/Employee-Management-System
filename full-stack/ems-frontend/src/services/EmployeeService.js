@@ -4,7 +4,7 @@ axios.defaults.headers.post["Content-Type"] = 'application/json';
 
 axios.defaults.withCredentials = true;
 
-const REST_API_BASE_URL = 'https://localhost:443/api';
+const REST_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const request = (method, url, data) => {
   return axios({
