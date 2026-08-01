@@ -43,7 +43,7 @@ public class EmployeeController {
                 .secure(true)
                 .path("/")
                 .maxAge(maxAge)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
     }
 
@@ -102,7 +102,7 @@ public class EmployeeController {
                 .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
 
         return ResponseEntity.ok()
@@ -198,7 +198,7 @@ public class EmployeeController {
                 .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
 
         return ResponseEntity.ok()
@@ -216,7 +216,7 @@ public class EmployeeController {
                 .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
 
         return ResponseEntity.ok()
